@@ -127,7 +127,7 @@ function validateTalkerTalk(req, res, next) {
   if (!regexDate.test(talk.watchedAt)) {
     return res.status(400).send({ message: 'O campo "watchedAt" deve ter o formato "dd/mm/aaaa"' });
   }
-  if (!talk.rate) {
+  if (talk.rate == null) {
     return res.status(400).send({ message: 'O campo "rate" é obrigatório' });
   }
   return next();
@@ -168,4 +168,19 @@ app.post('/talker', isValidToken, validateTalkerNameAge,
   } catch (error) {
     res.status(404).send({ message: error.message });
   }
+});
+
+app.put('/talker/:id', isValidToken, 
+  validateTalkerNameAge, validateTalkerTalk, validateTalkerRate, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const talkers = await readFile();
+      const indexTalkers = talkers.findIndex((element) => element.id === Number(id));
+      talkers[indexTalkers] = { id: Number(id), ...req.body };
+      const updateTalker = JSON.stringify(talkers, null, 2);
+      await fs.writeFile(talkerPath, updateTalker);
+      res.status(200).json(talkers[indexTalkers]);
+    } catch (error) {
+      res.status(404).send({ message: error.message });
+    }
 });
