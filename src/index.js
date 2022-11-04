@@ -184,3 +184,16 @@ app.put('/talker/:id', isValidToken,
       res.status(404).send({ message: error.message });
     }
 });
+
+app.delete('/talker/:id', isValidToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const talkers = await readFile();
+    const filteredTalkers = talkers.filter((element) => element.id !== Number(id));
+    const updateTalkers = JSON.stringify(filteredTalkers, null, 2);
+    await fs.writeFile(talkerPath, updateTalkers);
+    res.status(204).end();
+  } catch (error) {
+    res.status(404).send({ message: error.message });
+  }
+});
