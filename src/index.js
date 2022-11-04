@@ -51,3 +51,24 @@ app.get('/talker/:id', async (req, res) => {
     res.status(404).send({ message: error.message });
   }
 });
+
+function makeid(length) {
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const charactersLength = characters.length;
+  for (let index = 0; index < length; index += 1) {
+      result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
+
+app.post('/login/', (req, res) => {
+    const { email, password } = req.body;
+    const test = {
+      email,
+      password,
+    };
+    if (test) {
+      return res.status(200).json({ token: makeid(16) });
+    }
+});
