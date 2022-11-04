@@ -64,7 +64,7 @@ function makeid(length) {
 
 function validateLogin(req, res, next) {
   const { email, password } = req.body;
-  const regexEmail = /\S+@\S+.\S+/;
+  const regexEmail = /^\S+@\S+\.\S+$/;
   if (!email) {
     return res.status(400).send({ message: 'O campo "email" é obrigatório' });
   } 
