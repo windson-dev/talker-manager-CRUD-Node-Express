@@ -22,35 +22,12 @@ const talkerPath = path.resolve(__dirname, './talker.json');
 
 async function readFile() {
   try {
-    const data = await fs.readFile(talkerPath);
+    const data = await fs.readFile(talkerPath, 'utf8');
     return JSON.parse(data);
   } catch (error) {
     console.error(`file not found ${error}`);
   }
 }
-
-app.get('/talker', async (_req, res) => {
-  try {
-    const talkers = await readFile();
-    res.status(200).json(talkers);
-  } catch (error) {
-    res.status(404).send({ message: error.message });
-  }
-});
-
-app.get('/talker/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const talkers = await readFile();
-    const talkersIndex = talkers.find((element) => element.id === Number(id));
-    if (!talkersIndex) {
-      return res.status(404).send({ message: 'Pessoa palestrante não encontrada' });
-    }
-    res.status(200).json({ ...talkersIndex });
-  } catch (error) {
-    res.status(404).send({ message: error.message });
-  }
-});
 
 function makeid(length) {
   let result = '';
@@ -79,22 +56,6 @@ function validateLogin(req, res, next) {
   }
   return next();
 }
-
-app.post('/login', validateLogin, (req, res) => {
-  try {
-    const { email, password } = req.body;
-    const test = {
-      email,
-      password,
-    };
-
-    if (test) {
-      return res.status(200).json({ token: makeid(16) });
-    }
-  } catch (error) {
-    return res.status(404).send({ message: error.message });
-  }
-});
 
 function validateTalkerNameAge(req, res, next) {
   const { name, age } = req.body;
@@ -154,6 +115,22 @@ function isValidToken(req, res, next) {
   return next();
 }
 
+app.post('/login', validateLogin, (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const test = {
+      email,
+      password,
+    };
+
+    if (test) {
+      return res.status(200).json({ token: makeid(16) });
+    }
+  } catch (error) {
+    return res.status(404).send({ message: error.message });
+  }
+});
+
 app.post('/talker', isValidToken, validateTalkerNameAge, 
   validateTalkerTalk, validateTalkerRate, async (req, res) => {
   try {
@@ -165,6 +142,36 @@ app.post('/talker', isValidToken, validateTalkerNameAge,
     const allTalkers = JSON.stringify([...talkers, newTalker]);
     await fs.writeFile(talkerPath, allTalkers);
     res.status(201).json(newTalker);
+  } catch (error) {
+    res.status(404).send({ message: error.message });
+  }
+});
+
+app.get('/talker/search', isValidToken, async (req, res) => {
+  const { q } = req.query;
+  const talkers = await readFile();
+  const filteredTalkers = talkers.filter((element) => element.name.includes(q));
+  return res.status(200).json(filteredTalkers);
+});
+
+app.get('/talker', async (_req, res) => {
+  try {
+    const talkers = await readFile();
+    res.status(200).json(talkers);
+  } catch (error) {
+    res.status(404).send({ message: error.message });
+  }
+});
+
+app.get('/talker/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const talkers = await readFile();
+    const talkersIndex = talkers.find((element) => element.id === Number(id));
+    if (!talkersIndex) {
+      return res.status(404).send({ message: 'Pessoa palestrante não encontrada' });
+    }
+    res.status(200).json({ ...talkersIndex });
   } catch (error) {
     res.status(404).send({ message: error.message });
   }
